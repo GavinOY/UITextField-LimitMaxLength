@@ -54,17 +54,12 @@ static NSString *kOverMaxLengthBlockKey = @"kOverMaxLengthBlockKey";
     UITextPosition *pos = [self positionFromPosition:selectedRange.start offset:0];
     //获取高亮部分内容
     NSString * selectedtext = [self textInRange:selectedRange];
-    NSString *preStr = [inputText substringToIndex:[inputText length]-[selectedtext length]];
+    NSString *preTextFiledStr = [inputText substringToIndex:[inputText length]-[selectedtext length]];
     //判断如果有高亮且减去高亮的字符串大于最大的字符长度则截断或没有高亮当前字符串已经大于最大长度。
-    if ([self getInputTextLength:preStr] > maxLength) {
-        NSString *subText= [self clipOverMaxLengthStr:preStr maxLength:maxLength];
+    if ([self getInputTextLength:preTextFiledStr] > maxLength) {
+        NSString *subText= [self clipOverMaxLengthStr:preTextFiledStr maxLength:maxLength];
         [self setText:subText];
         [self callBackOverLimitBlock];
-        return;
-    }
-    //如果有高亮且当前字数开始位置小于最大限制时允许输入
-    if (selectedRange && pos) {
-        return;
     }
 }
 
