@@ -46,7 +46,7 @@ static NSString *kOverMaxLengthBlockKey = @"kOverMaxLengthBlockKey";
 - (void)textFieldTextLengthLimit:(id)sender
 {
     NSNumber *lengthNumber = objc_getAssociatedObject(self, (__bridge const void *)(kTextMaxLengthKey));
-    int length = [lengthNumber intValue];
+    int maxLength = [lengthNumber intValue];
     NSString *inputText = [self text];
 
     UITextRange *selectedRange = [self markedTextRange];
@@ -56,9 +56,9 @@ static NSString *kOverMaxLengthBlockKey = @"kOverMaxLengthBlockKey";
     NSString * selectedtext = [self textInRange:selectedRange];
     NSString *preStr = [inputText substringToIndex:[inputText length]-[selectedtext length]];
     //判断如果有高亮且减去高亮的字符串大于最大的字符长度则截断或没有高亮当前字符串已经大于最大长度。
-    if ([preStr length] > length) {
-        NSString *strNew = [NSString stringWithString:inputText];
-        [self setText:[strNew substringToIndex:length]];
+    if ([self getInputTextLength:preStr] > maxLength) {
+        NSString *subText= [self clipOverMaxLengthStr:preStr maxLength:maxLength];
+        [self setText:subText];
         [self callBackOverLimitBlock];
         return;
     }
@@ -68,6 +68,40 @@ static NSString *kOverMaxLengthBlockKey = @"kOverMaxLengthBlockKey";
     }
 }
 
+-(NSString*)clipOverMaxLengthStr:(NSString*)text maxLength:(NSInteger)maxLen{
+    if ([self getInputTextLength:text] <= maxLen) {
+        return text;
+    }
+
+    NSInteger needLength = maxLen;
+    //用i记录需要截取的下标
+    NSInteger i = 0;
+    for (; needLength > 0; i++) {
+        int character = [text characterAtIndex:i];
+        if( character >= 0x4e00 && character <= 0x9fff) {
+            needLength -= 2;
+        }
+        else {
+            needLength--;
+        }
+    }
+    //出现了最后一个字是中文的情况，这时needLength为-1
+    if (needLength < 0) {
+        i --;
+    }
+    NSString *subStr = [text substringToIndex:i];
+    return subStr;
+}
+
+- (NSInteger)getInputTextLength:(NSString*)text{
+    if ([text length] <1) {
+        return 0;
+    }
+    NSStringEncoding encoding = CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingGB_18030_2000);
+    NSData *data= [text dataUsingEncoding:encoding];
+    NSInteger length=[data length];
+    return length;
+}
 
 
 @end
